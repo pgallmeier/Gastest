@@ -80,14 +80,13 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 
 /* mc */
 .mc-opts{display:flex;flex-direction:column;gap:8px;margin-bottom:14px}
-.mc-opt{background:var(--surf2);border:2px solid var(--bdr);border-radius:10px;padding:12px 15px;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:12px;font-size:14px;text-align:left;color:var(--txt)}
-.mc-opt:hover:not(.locked){border-color:#4a90c4;background:#1a3a5c}
-.mc-opt.sel{border-color:#22d3ee!important;background:#0d3a4a!important;box-shadow:inset 0 0 0 1px #22d3ee, 0 0 18px rgba(34,211,238,.3);color:#ffffff!important;font-weight:700}
-.mc-opt.sel .oltr{background:#22d3ee!important;border-color:#22d3ee!important;color:#000000!important;font-weight:700}
-.mc-opt.ok-ans{border-color:#4ade80!important;background:#0d3a1e!important;box-shadow:inset 0 0 0 1px #4ade80!important;color:#ffffff!important;font-weight:700}
-.mc-opt.ok-ans .oltr{background:#4ade80!important;border-color:#4ade80!important;color:#000000!important}
-.mc-opt.wrong-ans{border-color:#f87171!important;background:#3a0d0d!important;box-shadow:inset 0 0 0 1px #f87171!important;color:#ffffff!important}
-.mc-opt.locked{cursor:default}
+.mc-opt{background:var(--surf2);border:2px solid var(--bdr);border-radius:10px;padding:12px 15px;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:12px;font-size:14px;text-align:left}
+.mc-opt:hover:not(.locked){border-color:#4a90c4;background:#162e4a;transform:translateX(3px)}
+.mc-opt.sel{border-color:#22d3ee!important;background:rgba(34,211,238,.18)!important;box-shadow:0 0 0 1px rgba(34,211,238,.4),0 0 14px rgba(34,211,238,.15);transform:translateX(4px)}
+.mc-opt.sel .oltr{background:var(--boyle);border-color:var(--boyle);color:#07111f;font-weight:700}
+.mc-opt.ok-ans{border-color:var(--ok)!important;background:rgba(74,222,128,.13)!important;box-shadow:0 0 0 1px rgba(74,222,128,.4)!important}
+.mc-opt.wrong-ans{border-color:var(--err)!important;background:rgba(248,113,113,.13)!important;box-shadow:0 0 0 1px rgba(248,113,113,.4)!important}
+.mc-opt.locked{cursor:default;transform:none!important}
 .oltr{width:28px;height:28px;border:1px solid var(--bdr);border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Orbitron',monospace;font-size:9px;flex-shrink:0;transition:all .2s}
 
 /* numeric */
