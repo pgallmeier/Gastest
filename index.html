@@ -1,0 +1,1182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gas Laws Adaptive Assessment</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Nunito:ital,wght@0,300;0,400;0,600;0,700;1,400&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#07111f;--surf:#0e1f35;--surf2:#152a45;--bdr:#1d3354;
+  --boyle:#22d3ee;--charles:#4ade80;--gl:#c084fc;--id:#fb923c;
+  --easy:#4ade80;--med:#fbbf24;--hard:#f87171;
+  --ok:#4ade80;--err:#f87171;--txt:#dde8f5;--dim:#5a7a9e;--acc:#fbbf24;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--txt);font-family:'Nunito',sans-serif;font-size:16px;line-height:1.6;min-height:100vh;overflow-x:hidden}
+body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse at 20% 20%,rgba(34,211,238,.05) 0,transparent 50%),radial-gradient(ellipse at 80% 80%,rgba(192,132,252,.05) 0,transparent 50%);pointer-events:none;z-index:0}
+
+/* progress */
+#pbar{position:fixed;top:0;left:0;right:0;height:4px;background:var(--bdr);z-index:200}
+#pfill{height:100%;background:linear-gradient(90deg,var(--easy),var(--med),var(--hard));width:0%;transition:width .5s ease}
+
+/* screens */
+.screen{display:none;position:relative;z-index:1}
+.screen.active{display:block}
+#welcome.active{display:flex;align-items:center;justify-content:center;min-height:100vh}
+
+/* welcome */
+.wcard{background:var(--surf);border:1px solid var(--bdr);border-radius:22px;padding:48px 36px;text-align:center;max-width:480px;width:90%;box-shadow:0 0 80px rgba(34,211,238,.07)}
+.wlogo{font-family:'Orbitron',monospace;font-size:10px;letter-spacing:.35em;color:var(--dim);margin-bottom:26px}
+.wtitle{font-family:'Orbitron',monospace;font-size:24px;font-weight:900;line-height:1.2;background:linear-gradient(135deg,var(--boyle),var(--charles),var(--gl));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:6px}
+.wsub{color:var(--dim);font-size:14px;margin-bottom:10px}
+.wtag{display:inline-block;background:rgba(251,191,36,.12);border:1px solid rgba(251,191,36,.3);border-radius:20px;padding:5px 14px;font-size:12px;color:var(--acc);margin-bottom:26px}
+.wstats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:28px}
+.wstat{background:var(--surf2);border-radius:10px;padding:12px 6px}
+.wstat strong{display:block;font-family:'Orbitron',monospace;font-size:20px;color:var(--txt)}
+.wstat span{font-size:12px;color:var(--dim)}
+.wlabel{text-align:left;font-size:11px;color:var(--dim);text-transform:uppercase;letter-spacing:.12em;display:block;margin-bottom:6px}
+.winput{width:100%;background:var(--surf2);border:1px solid var(--bdr);border-radius:10px;padding:13px 16px;color:var(--txt);font-family:'Nunito',sans-serif;font-size:16px;outline:none;transition:border-color .2s;margin-bottom:22px}
+.winput:focus{border-color:var(--boyle)}
+.wbtn{width:100%;background:linear-gradient(135deg,var(--boyle),var(--charles));border:none;border-radius:12px;padding:14px;color:#07111f;font-family:'Orbitron',monospace;font-size:12px;font-weight:700;letter-spacing:.12em;cursor:pointer;transition:all .2s}
+.wbtn:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 8px 28px rgba(34,211,238,.25)}
+.wbtn:disabled{opacity:.3;cursor:not-allowed}
+.wdiff{display:flex;justify-content:center;gap:18px;margin-bottom:22px;font-size:12px}
+.wdiff span{display:flex;align-items:center;gap:5px}
+.dot{width:9px;height:9px;border-radius:50%;display:inline-block}
+
+/* quiz layout */
+.qwrap{max-width:800px;margin:0 auto;padding:28px 18px 70px}
+
+/* top bar */
+.topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px}
+.qcount{font-family:'Orbitron',monospace;font-size:11px;color:var(--dim);letter-spacing:.08em}
+.law-tag{font-family:'Orbitron',monospace;font-size:10px;padding:4px 12px;border-radius:20px;letter-spacing:.1em}
+.diff-badge{font-family:'Orbitron',monospace;font-size:10px;padding:4px 12px;border-radius:20px;letter-spacing:.1em;border:1px solid}
+
+/* formula ref */
+.fref{background:var(--surf);border:1px solid var(--bdr);border-radius:12px;margin-bottom:18px;overflow:hidden}
+.fref-head{padding:11px 16px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;font-size:13px;color:var(--dim);user-select:none}
+.fref-head:hover{color:var(--txt)}
+.fref-body{display:none;padding:14px 16px;border-top:1px solid var(--bdr)}
+.fref-body.open{display:block}
+.frow{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:8px}
+.fcell{background:var(--surf2);border-radius:8px;padding:10px 12px}
+.fcell .fname{font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--dim);margin-bottom:4px}
+.fcell .fform{font-family:'Fira Code',monospace;font-size:15px;font-weight:500}
+.fcell .fsolve{font-family:'Fira Code',monospace;font-size:11px;color:var(--dim);line-height:1.8;margin-top:4px}
+.fwarn{font-size:12px;color:#f87171;margin-top:6px}
+
+/* question card */
+.qcard{background:var(--surf);border:1px solid var(--bdr);border-radius:16px;padding:26px}
+.qtxt{font-size:15px;line-height:1.75;margin-bottom:16px}
+.qgiven{background:var(--surf2);border-radius:8px;padding:10px 14px;font-family:'Fira Code',monospace;font-size:12px;color:var(--dim);line-height:1.9;margin-bottom:16px}
+
+/* hint */
+.hbtn{background:none;border:none;color:var(--acc);font-family:'Nunito',sans-serif;font-size:13px;cursor:pointer;padding:3px 0;margin-bottom:8px;display:flex;align-items:center;gap:5px}
+.hbtn:hover{text-decoration:underline}
+.hbox{display:none;background:rgba(251,191,36,.06);border:1px solid rgba(251,191,36,.2);border-radius:8px;padding:11px 14px;font-size:13px;color:#fbbf24;line-height:1.65;margin-bottom:12px}
+.hbox.on{display:block}
+
+/* mc */
+.mc-opts{display:flex;flex-direction:column;gap:8px;margin-bottom:14px}
+.mc-opt{background:var(--surf2);border:1px solid var(--bdr);border-radius:10px;padding:12px 15px;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:12px;font-size:14px;text-align:left}
+.mc-opt:hover:not(.locked){border-color:#2a4a6a;background:#162a45}
+.mc-opt.sel{border-color:#2a4a6a;background:#162a45}
+.mc-opt.ok-ans{border-color:var(--ok)!important;background:rgba(74,222,128,.08)!important}
+.mc-opt.wrong-ans{border-color:var(--err)!important;background:rgba(248,113,113,.08)!important}
+.mc-opt.locked{cursor:default}
+.oltr{width:28px;height:28px;border:1px solid var(--bdr);border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Orbitron',monospace;font-size:9px;flex-shrink:0;transition:all .2s}
+
+/* numeric */
+.num-row{display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap}
+.numin{background:var(--surf2);border:1px solid var(--bdr);border-radius:9px;padding:12px 15px;color:var(--txt);font-family:'Fira Code',monospace;font-size:17px;width:150px;outline:none;transition:border-color .2s}
+.numin:focus{border-color:var(--dim)}
+.numin.ok{border-color:var(--ok)!important}
+.numin.bad{border-color:var(--err)!important}
+.unit{font-family:'Fira Code',monospace;color:var(--dim);font-size:14px}
+.ws{margin-top:8px}
+.ws label{font-size:11px;color:var(--dim);text-transform:uppercase;letter-spacing:.08em;display:block;margin-bottom:4px}
+.ws textarea{width:100%;background:var(--surf2);border:1px solid var(--bdr);border-radius:8px;padding:9px 12px;color:var(--txt);font-family:'Fira Code',monospace;font-size:12px;resize:vertical;min-height:58px;outline:none}
+
+/* submit btn */
+.sbtn{background:var(--surf2);border:1px solid var(--bdr);border-radius:9px;padding:10px 22px;color:var(--dim);font-family:'Nunito',sans-serif;font-size:14px;font-weight:600;cursor:not-allowed;margin-top:12px;transition:all .2s}
+.sbtn.ready{color:var(--txt);border-color:#2a4a6a;cursor:pointer}
+.sbtn.ready:hover{border-color:var(--boyle);box-shadow:0 0 16px rgba(34,211,238,.15)}
+
+/* feedback */
+.fb{display:none;margin-top:16px;padding:14px;border-radius:10px;font-size:14px;line-height:1.7}
+.fb.ok{background:rgba(74,222,128,.08);border:1px solid var(--ok);display:block}
+.fb.bad{background:rgba(248,113,113,.08);border:1px solid var(--err);display:block}
+
+/* adaptive indicator */
+.adapt-msg{display:none;margin-top:12px;padding:9px 14px;border-radius:8px;font-size:13px;font-weight:600}
+.adapt-msg.up{background:rgba(74,222,128,.1);border:1px solid rgba(74,222,128,.3);color:var(--ok)}
+.adapt-msg.dn{background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.3);color:var(--acc)}
+.adapt-msg.same{background:rgba(90,122,158,.1);border:1px solid rgba(90,122,158,.3);color:var(--dim)}
+.adapt-msg.show{display:block}
+
+/* next btn */
+.nbtn{display:none;margin-top:18px;background:var(--surf2);border:1px solid var(--bdr);border-radius:10px;padding:12px 28px;color:var(--txt);font-family:'Orbitron',monospace;font-size:11px;letter-spacing:.1em;cursor:pointer;transition:all .2s;float:right}
+.nbtn:hover{border-color:var(--boyle);box-shadow:0 0 20px rgba(34,211,238,.18);transform:translateY(-1px)}
+.nbtn.show{display:inline-block}
+.cf{clear:both}
+
+/* results */
+.rwrap{max-width:780px;margin:0 auto;padding:32px 18px 70px}
+.rcard{background:var(--surf);border:1px solid var(--bdr);border-radius:20px;padding:38px 28px;text-align:center;margin-bottom:20px}
+.ring-w{width:160px;height:160px;margin:0 auto 22px;position:relative}
+.ring-w svg{transform:rotate(-90deg)}
+.ring-t{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.ring-n{font-family:'Orbitron',monospace;font-size:36px;font-weight:700}
+.ring-d{font-size:13px;color:var(--dim)}
+.rmsg{font-size:20px;font-weight:700;margin-bottom:5px}
+.rsub{color:var(--dim);font-size:14px;margin-bottom:24px}
+.bdown{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:6px}
+.bd{background:var(--surf2);border-radius:10px;padding:13px 8px}
+.bdl{font-size:10px;color:var(--dim);text-transform:uppercase;letter-spacing:.07em;margin-bottom:4px}
+.bds{font-family:'Orbitron',monospace;font-size:14px}
+.diffpath{margin-top:16px;font-size:12px;color:var(--dim);line-height:2}
+.diffpath span{font-family:'Fira Code',monospace;margin:0 2px}
+.subbox{margin-top:28px;text-align:left}
+.subtl{font-family:'Orbitron',monospace;font-size:11px;letter-spacing:.12em;color:var(--dim);margin-bottom:8px}
+.subinfo{font-size:13px;color:var(--dim);margin-bottom:14px;line-height:1.65}
+.codebox{background:var(--surf2);border:2px solid var(--boyle);border-radius:11px;padding:18px 20px;font-family:'Fira Code',monospace;font-size:13px;line-height:1.9;color:var(--txt);margin-bottom:12px;box-shadow:0 0 24px rgba(34,211,238,.08);white-space:pre-wrap;word-break:break-word}
+.cpbtn{background:var(--boyle);border:none;border-radius:8px;padding:10px 22px;color:#07111f;font-family:'Orbitron',monospace;font-size:11px;font-weight:700;letter-spacing:.1em;cursor:pointer;transition:all .2s}
+.cpbtn:hover{opacity:.85;transform:translateY(-1px)}
+.cpmsg{margin-top:8px;color:var(--ok);font-size:13px;display:none}
+
+@media(max-width:580px){
+  .frow{grid-template-columns:1fr}
+  .bdown{grid-template-columns:1fr 1fr}
+  .wstats{grid-template-columns:1fr}
+  .topbar{flex-direction:column;align-items:flex-start}
+}
+
+/* lock screen */
+#locked.active{display:flex;align-items:center;justify-content:center;min-height:100vh}
+.lockcard{background:var(--surf);border:1px solid var(--bdr);border-radius:22px;padding:44px 36px;text-align:center;max-width:460px;width:90%;box-shadow:0 0 60px rgba(248,113,113,.08)}
+.lock-icon{font-size:52px;margin-bottom:18px}
+.lock-title{font-family:'Orbitron',monospace;font-size:18px;font-weight:700;color:var(--err);margin-bottom:8px}
+.lock-name{font-size:20px;font-weight:700;color:var(--txt);margin-bottom:6px}
+.lock-score{font-family:'Fira Code',monospace;font-size:28px;color:var(--acc);margin-bottom:6px}
+.lock-date{font-size:13px;color:var(--dim);margin-bottom:28px}
+.lock-msg{background:var(--surf2);border-radius:10px;padding:14px 16px;font-size:13px;color:var(--dim);line-height:1.7;margin-bottom:28px}
+.lock-reset-btn{background:none;border:1px solid var(--bdr);border-radius:8px;padding:8px 18px;color:var(--dim);font-family:'Nunito',sans-serif;font-size:13px;cursor:pointer;transition:all .2s}
+.lock-reset-btn:hover{border-color:#3a5580;color:var(--txt)}
+.reset-panel{display:none;margin-top:20px;text-align:left}
+.reset-panel.show{display:block}
+.reset-label{font-size:11px;color:var(--dim);text-transform:uppercase;letter-spacing:.12em;display:block;margin-bottom:7px}
+.reset-input{width:100%;background:var(--surf2);border:1px solid var(--bdr);border-radius:9px;padding:12px 15px;color:var(--txt);font-family:'Fira Code',monospace;font-size:15px;outline:none;margin-bottom:12px;transition:border-color .2s;letter-spacing:.15em}
+.reset-input:focus{border-color:var(--dim)}
+.reset-input.wrong{border-color:var(--err)!important;animation:shake .3s ease}
+.reset-go{width:100%;background:var(--surf2);border:1px solid var(--bdr);border-radius:9px;padding:11px;color:var(--txt);font-family:'Orbitron',monospace;font-size:11px;font-weight:700;letter-spacing:.1em;cursor:pointer;transition:all .2s}
+.reset-go:hover{border-color:var(--boyle);box-shadow:0 0 16px rgba(34,211,238,.15)}
+.reset-err{color:var(--err);font-size:13px;margin-top:8px;display:none}
+.reset-err.show{display:block}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+</style>
+</head>
+<body>
+<div id="pbar"><div id="pfill"></div></div>
+
+<!-- ═══════════ LOCKED ═══════════ -->
+<div class="screen" id="locked">
+  <div class="lockcard">
+    <div class="lock-icon">🔒</div>
+    <div class="lock-title">Assessment Already Submitted</div>
+    <div class="lock-name" id="lock-name"></div>
+    <div class="lock-score" id="lock-score"></div>
+    <div class="lock-date" id="lock-date"></div>
+    <div class="lock-msg">
+      You have already completed this assessment and your submission code was recorded.<br><br>
+      If you believe this is an error, ask your teacher to reset your attempt.
+    </div>
+    <button class="lock-reset-btn" onclick="toggleResetPanel()">🔑 Teacher Reset</button>
+    <div class="reset-panel" id="reset-panel">
+      <label class="reset-label">Enter Teacher Password</label>
+      <input class="reset-input" type="password" id="reset-pw" placeholder="••••••••" autocomplete="off">
+      <button class="reset-go" onclick="tryReset()">UNLOCK FOR RETAKE</button>
+      <div class="reset-err" id="reset-err">❌ Incorrect password. Try again.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ WELCOME ═══════════ -->
+<div class="screen" id="welcome">
+  <div class="wcard">
+    <div class="wlogo">Coldspring-Oakhurst CISD · Chemistry</div>
+    <div class="wtitle">Gas Laws<br>Adaptive Assessment</div>
+    <div class="wsub">Boyle's · Charles's · Gay-Lussac's</div>
+    <div class="wtag">⚡ Questions adjust to your level as you go</div>
+    <div class="wstats">
+      <div class="wstat"><strong>25</strong><span>Questions</span></div>
+      <div class="wstat"><strong>~45</strong><span>Minutes</span></div>
+      <div class="wstat"><strong>3</strong><span>Difficulty Levels</span></div>
+    </div>
+    <div class="wdiff">
+      <span><span class="dot" style="background:var(--easy)"></span> Easy</span>
+      <span><span class="dot" style="background:var(--med)"></span> Medium</span>
+      <span><span class="dot" style="background:var(--hard)"></span> Hard</span>
+    </div>
+    <label class="wlabel" for="sname">Your Full Name</label>
+    <input class="winput" type="text" id="sname" placeholder="First Last" autocomplete="off">
+    <button class="wbtn" id="startbtn" disabled onclick="startQuiz()">BEGIN ASSESSMENT →</button>
+  </div>
+</div>
+
+<!-- ═══════════ QUIZ ═══════════ -->
+<div class="screen" id="quiz">
+  <div class="qwrap">
+    <div class="topbar">
+      <span class="qcount" id="qcount">Question 1 of 25</span>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <span class="law-tag" id="law-tag"></span>
+        <span class="diff-badge" id="diff-badge"></span>
+      </div>
+    </div>
+
+    <!-- Formula Reference -->
+    <div class="fref">
+      <div class="fref-head" onclick="toggleRef()">
+        <span>📐 Formula Reference Card &nbsp;<span style="font-size:11px;color:var(--acc)">(click to expand)</span></span>
+        <span id="ref-arrow">▼</span>
+      </div>
+      <div class="fref-body" id="fref-body">
+        <div class="frow">
+          <div class="fcell">
+            <div class="fname" style="color:var(--boyle)">Boyle's Law</div>
+            <div class="fform" style="color:var(--boyle)">P₁V₁ = P₂V₂</div>
+            <div class="fsolve">
+              V₂ = (P₁×V₁)÷P₂<br>
+              P₂ = (P₁×V₁)÷V₂
+            </div>
+          </div>
+          <div class="fcell">
+            <div class="fname" style="color:var(--charles)">Charles's Law</div>
+            <div class="fform" style="color:var(--charles)">V₁/T₁ = V₂/T₂</div>
+            <div class="fsolve">
+              V₂ = (V₁×T₂)÷T₁<br>
+              T₂ = (T₁×V₂)÷V₁
+            </div>
+          </div>
+          <div class="fcell">
+            <div class="fname" style="color:var(--gl)">Gay-Lussac's Law</div>
+            <div class="fform" style="color:var(--gl)">P₁/T₁ = P₂/T₂</div>
+            <div class="fsolve">
+              P₂ = (P₁×T₂)÷T₁<br>
+              T₂ = (P₂×T₁)÷P₁
+            </div>
+          </div>
+        </div>
+        <div class="fwarn">⚠ Always convert °C to Kelvin before solving! &nbsp; K = °C + 273</div>
+      </div>
+    </div>
+
+    <!-- Question area -->
+    <div class="qcard" id="qcard">
+      <div class="qtxt" id="qtxt"></div>
+      <div class="qgiven" id="qgiven" style="display:none"></div>
+      <button class="hbtn" id="hbtn" onclick="showHint()">💡 Hint</button>
+      <div class="hbox" id="hbox"></div>
+      <div id="qbody"></div>
+      <div class="fb" id="fb"></div>
+      <div class="adapt-msg" id="adaptmsg"></div>
+      <button class="nbtn" id="nbtn" onclick="nextQ()">NEXT QUESTION →</button>
+      <div class="cf"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ RESULTS ═══════════ -->
+<div class="screen" id="results">
+  <div class="rwrap">
+    <div class="rcard">
+      <div class="ring-w">
+        <svg width="160" height="160" viewBox="0 0 160 160">
+          <circle cx="80" cy="80" r="65" fill="none" stroke="#1d3354" stroke-width="14"/>
+          <circle id="sring" cx="80" cy="80" r="65" fill="none" stroke="#4ade80" stroke-width="14"
+            stroke-dasharray="408" stroke-dashoffset="408" stroke-linecap="round"
+            style="transition:stroke-dashoffset 1.3s ease .3s;transform:rotate(-90deg);transform-origin:80px 80px"/>
+        </svg>
+        <div class="ring-t">
+          <div class="ring-n" id="rnum">0</div>
+          <div class="ring-d">/ 25</div>
+        </div>
+      </div>
+      <div class="rmsg" id="rmsg"></div>
+      <div class="rsub" id="rsub"></div>
+      <div class="bdown">
+        <div class="bd"><div class="bdl" style="color:var(--boyle)">Boyle's Law</div><div class="bds" id="bdb" style="color:var(--boyle)">—</div></div>
+        <div class="bd"><div class="bdl" style="color:var(--charles)">Charles's Law</div><div class="bds" id="bdc" style="color:var(--charles)">—</div></div>
+        <div class="bd"><div class="bdl" style="color:var(--gl)">Gay-Lussac's</div><div class="bds" id="bdg" style="color:var(--gl)">—</div></div>
+        <div class="bd"><div class="bdl" style="color:var(--id)">Identify Law</div><div class="bds" id="bdi" style="color:var(--id)">—</div></div>
+      </div>
+      <div class="diffpath" id="diffpath"></div>
+    </div>
+
+    <div class="subbox">
+      <div class="subtl">📋 GOOGLE CLASSROOM SUBMISSION</div>
+      <p class="subinfo">Copy the box below and paste it as your comment in Google Classroom.</p>
+      <div class="codebox" id="codebox"></div>
+      <button class="cpbtn" onclick="copyCode()">📋 COPY TO CLIPBOARD</button>
+      <div class="cpmsg" id="cpmsg">✓ Copied! Paste it into Google Classroom now.</div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════
+// TEACHER PASSWORD — change this to whatever you want
+// ═══════════════════════════════════════════════════
+const TEACHER_PW = 'COCISD25';
+
+// ═══════════════════════════════════════════════════
+// STORAGE KEY
+// ═══════════════════════════════════════════════════
+const STORAGE_KEY = 'gaslaws_adaptive_v1';
+
+// ═══════════════════════════════════════════════════
+// ON PAGE LOAD — check if already completed
+// ═══════════════════════════════════════════════════
+window.addEventListener('DOMContentLoaded', () => {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      const data = JSON.parse(saved);
+      document.getElementById('lock-name').textContent = data.name;
+      document.getElementById('lock-score').textContent = `Score: ${data.score}/25  (${Math.round(data.score/25*100)}%)`;
+      document.getElementById('lock-date').textContent = `Submitted: ${data.date}`;
+      showScreen('locked');
+      return;
+    }
+  } catch(e) {}
+  // Not completed — show welcome normally
+  document.getElementById('welcome').classList.add('active');
+});
+
+function toggleResetPanel(){
+  const p = document.getElementById('reset-panel');
+  p.classList.toggle('show');
+  if(p.classList.contains('show')) document.getElementById('reset-pw').focus();
+}
+
+function tryReset(){
+  const pw = document.getElementById('reset-pw').value;
+  const inp = document.getElementById('reset-pw');
+  const err = document.getElementById('reset-err');
+  if(pw === TEACHER_PW){
+    localStorage.removeItem(STORAGE_KEY);
+    // Brief success message then reload
+    inp.style.borderColor='var(--ok)';
+    err.style.display='none';
+    document.querySelector('.reset-go').textContent='✓ UNLOCKED — RELOADING...';
+    document.querySelector('.reset-go').style.borderColor='var(--ok)';
+    setTimeout(()=>location.reload(), 1200);
+  } else {
+    inp.classList.add('wrong');
+    err.classList.add('show');
+    setTimeout(()=>inp.classList.remove('wrong'), 400);
+    inp.value='';
+    inp.focus();
+  }
+}
+
+function saveCompletion(name, score){
+  const d = new Date();
+  const dateStr = d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) +
+    ' at ' + d.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({name, score, date: dateStr}));
+  } catch(e) {}
+}
+
+
+// ═══════════════════════════════════════════════════
+// type: 'mc' or 'num'
+// ans: index for mc, number for num
+// tol: tolerance for num
+// diff: 'easy'|'medium'|'hard'
+// law: 'boyle'|'charles'|'gl'|'id'
+
+const QB = {
+boyle: {
+  easy: [
+    {id:'be1',type:'mc',
+     txt:"When you <strong>squeeze</strong> a balloon, making its volume smaller, what happens to the pressure of the gas inside (assuming temperature stays constant)?",
+     opts:["The pressure decreases","The pressure stays the same","The pressure increases","The pressure drops to zero"],
+     ans:2,
+     hint:"Imagine the same number of molecules now crammed into a smaller space. How often do they hit the walls?",
+     ok:"Correct! ✅ Smaller volume = molecules collide with walls more frequently = higher pressure. Inverse relationship: V↓ so P↑.",
+     bad:"Think about it this way: same number of molecules, less space. They hit the walls more often → pressure <strong>increases</strong>."},
+    {id:'be2',type:'mc',
+     txt:"Which variable must remain <strong>constant</strong> for Boyle's Law (P₁V₁ = P₂V₂) to apply?",
+     opts:["Pressure","Volume","Temperature","Number of gas molecules"],
+     ans:2,
+     hint:"Boyle's Law only involves P and V. Think about what the third gas variable must be doing.",
+     ok:"Correct! ✅ Temperature must stay constant — this is called an <em>isothermal</em> process. Only P and V are changing.",
+     bad:"Temperature must stay constant for Boyle's Law. If T changes, you'd need the Combined Gas Law instead."},
+    {id:'be3',type:'num',
+     txt:"A gas at <strong>1.0 atm</strong> occupies a volume of <strong>6.0 L</strong>. The pressure is increased to <strong>3.0 atm</strong> at constant temperature. What is the new volume?",
+     given:"P₁ = 1.0 atm    V₁ = 6.0 L    P₂ = 3.0 atm    V₂ = ?",
+     ans:2.0,tol:0.15,unit:"L",
+     hint:"Use V₂ = (P₁ × V₁) ÷ P₂. Plug in your known values and solve.",
+     ok:"V₂ = (1.0 × 6.0) ÷ 3.0 = <strong>2.0 L</strong> ✅",
+     bad:"V₂ = (P₁ × V₁) ÷ P₂ = (1.0 × 6.0) ÷ 3.0 = <strong>2.0 L</strong>"},
+    {id:'be4',type:'mc',
+     txt:"In Boyle's Law, pressure and volume have what kind of relationship?",
+     opts:["Direct — when one increases, the other increases","Inverse — when one increases, the other decreases","No relationship — they are independent","Equal — pressure always equals volume"],
+     ans:1,
+     hint:"Picture squeezing a balloon. As you increase pressure... what happens to volume?",
+     ok:"Correct! ✅ Inverse relationship: P↑ means V↓, and P↓ means V↑. Their <em>product</em> stays constant.",
+     bad:"P and V have an <strong>inverse</strong> relationship. One goes up, the other comes down — their product P×V stays constant."},
+    {id:'be5',type:'num',
+     txt:"A gas at <strong>2.0 atm</strong> occupies <strong>4.0 L</strong>. The pressure is decreased to <strong>1.0 atm</strong> at constant temperature. What is the new volume?",
+     given:"P₁ = 2.0 atm    V₁ = 4.0 L    P₂ = 1.0 atm    V₂ = ?",
+     ans:8.0,tol:0.2,unit:"L",
+     hint:"When pressure drops by half, what should happen to volume according to the inverse relationship?",
+     ok:"V₂ = (2.0 × 4.0) ÷ 1.0 = <strong>8.0 L</strong> ✅ Pressure halved, so volume doubled.",
+     bad:"V₂ = (P₁ × V₁) ÷ P₂ = (2.0 × 4.0) ÷ 1.0 = <strong>8.0 L</strong>"}
+  ],
+  medium: [
+    {id:'bm1',type:'mc',
+     txt:"A scuba diver exhales a small air bubble at a depth where pressure is <strong>3.0 atm</strong>. The bubble has a volume of <strong>2.0 mL</strong>. As it rises toward the surface, pressure decreases to <strong>1.0 atm</strong>. What is the bubble's new volume?",
+     opts:["6.0 mL","0.67 mL","2.0 mL","4.0 mL"],
+     ans:0,
+     hint:"Set up P₁V₁ = P₂V₂. You're solving for V₂. Pressure decreased, so what should happen to volume?",
+     ok:"Correct! ✅ V₂ = (3.0 × 2.0) ÷ 1.0 = 6.0 mL. Pressure dropped to ⅓, so volume tripled!",
+     bad:"V₂ = (3.0 × 2.0) ÷ 1.0 = <strong>6.0 mL</strong>. Pressure dropped to ⅓ its value, so volume tripled."},
+    {id:'bm2',type:'num',
+     txt:"A gas occupies <strong>8.0 L</strong> at <strong>2.0 atm</strong>. It is compressed to <strong>4.0 L</strong> at constant temperature. What is the new pressure?",
+     given:"P₁ = 2.0 atm    V₁ = 8.0 L    V₂ = 4.0 L    P₂ = ?",
+     ans:4.0,tol:0.2,unit:"atm",
+     hint:"Use P₂ = (P₁ × V₁) ÷ V₂. Volume was cut in half — what do you predict will happen to pressure?",
+     ok:"P₂ = (2.0 × 8.0) ÷ 4.0 = <strong>4.0 atm</strong> ✅ Volume halved, so pressure doubled.",
+     bad:"P₂ = (P₁ × V₁) ÷ V₂ = (2.0 × 8.0) ÷ 4.0 = <strong>4.0 atm</strong>"},
+    {id:'bm3',type:'mc',
+     txt:"A gas is at <strong>4.0 atm</strong> and is allowed to expand at constant temperature until its volume <strong>doubles</strong>. What is the new pressure?",
+     opts:["2.0 atm","8.0 atm","4.0 atm","1.0 atm"],
+     ans:0,
+     hint:"If volume doubles, and P×V must stay constant, what must happen to pressure?",
+     ok:"Correct! ✅ Volume doubled → pressure is cut in half → 2.0 atm. P×V is always constant in Boyle's Law.",
+     bad:"Volume doubled, so pressure must be cut in half: 4.0 ÷ 2 = <strong>2.0 atm</strong>. P×V stays constant."},
+    {id:'bm4',type:'num',
+     txt:"A syringe contains gas at <strong>3.0 atm</strong> in a volume of <strong>5.0 L</strong>. The pressure is increased to <strong>5.0 atm</strong> at constant temperature. What is the new volume?",
+     given:"P₁ = 3.0 atm    V₁ = 5.0 L    P₂ = 5.0 atm    V₂ = ?",
+     ans:3.0,tol:0.15,unit:"L",
+     hint:"V₂ = (P₁ × V₁) ÷ P₂. Pressure increased — volume should decrease.",
+     ok:"V₂ = (3.0 × 5.0) ÷ 5.0 = <strong>3.0 L</strong> ✅",
+     bad:"V₂ = (3.0 × 5.0) ÷ 5.0 = <strong>3.0 L</strong>"},
+    {id:'bm5',type:'mc',
+     txt:"A bicycle pump compresses air from <strong>500 mL</strong> to <strong>100 mL</strong> at constant temperature. The initial pressure was <strong>1.0 atm</strong>. What is the final pressure?",
+     opts:["5.0 atm","0.2 atm","1.0 atm","2.5 atm"],
+     ans:0,
+     hint:"P₂ = (P₁ × V₁) ÷ V₂. Volume decreased to 1/5 of its original — by what factor should pressure change?",
+     ok:"Correct! ✅ P₂ = (1.0 × 500) ÷ 100 = 5.0 atm. Volume dropped to ⅕, so pressure × 5.",
+     bad:"P₂ = (1.0 × 500) ÷ 100 = <strong>5.0 atm</strong>. Volume shrank to ⅕, so pressure increased 5×."}
+  ],
+  hard: [
+    {id:'bh1',type:'num',
+     txt:"A gas at <strong>4.5 atm</strong> has a volume of <strong>2.4 L</strong>. It expands to <strong>5.4 L</strong> at constant temperature. What is the new pressure?",
+     given:"P₁ = 4.5 atm    V₁ = 2.4 L    V₂ = 5.4 L    P₂ = ?",
+     ans:2.0,tol:0.15,unit:"atm",
+     hint:"P₂ = (P₁ × V₁) ÷ V₂. Do the multiplication in the numerator first, then divide.",
+     ok:"P₂ = (4.5 × 2.4) ÷ 5.4 = 10.8 ÷ 5.4 = <strong>2.0 atm</strong> ✅",
+     bad:"P₂ = (4.5 × 2.4) ÷ 5.4 = 10.8 ÷ 5.4 = <strong>2.0 atm</strong>"},
+    {id:'bh2',type:'mc',
+     txt:"A sealed container holds gas at <strong>1.2 atm</strong> in a volume of <strong>750 mL</strong>. What pressure is needed to compress it to <strong>250 mL</strong> at constant temperature?",
+     opts:["3.6 atm","0.40 atm","2.4 atm","4.5 atm"],
+     ans:0,
+     hint:"P₂ = (P₁ × V₁) ÷ V₂ = (1.2 × 750) ÷ 250. Work out the numerator first.",
+     ok:"Correct! ✅ P₂ = (1.2 × 750) ÷ 250 = 900 ÷ 250 = 3.6 atm.",
+     bad:"P₂ = (1.2 × 750) ÷ 250 = 900 ÷ 250 = <strong>3.6 atm</strong>"},
+    {id:'bh3',type:'num',
+     txt:"A gas at <strong>0.80 atm</strong> occupies <strong>2.50 L</strong>. It is compressed until the pressure reaches <strong>3.20 atm</strong> at constant temperature. What is the new volume?",
+     given:"P₁ = 0.80 atm    V₁ = 2.50 L    P₂ = 3.20 atm    V₂ = ?",
+     ans:0.625,tol:0.05,unit:"L",
+     hint:"V₂ = (P₁ × V₁) ÷ P₂ = (0.80 × 2.50) ÷ 3.20. Watch your decimal places.",
+     ok:"V₂ = (0.80 × 2.50) ÷ 3.20 = 2.00 ÷ 3.20 = <strong>0.625 L</strong> ✅",
+     bad:"V₂ = (0.80 × 2.50) ÷ 3.20 = 2.00 ÷ 3.20 = <strong>0.625 L</strong>"},
+    {id:'bh4',type:'mc',
+     txt:"A gas at <strong>6.0 atm</strong> occupies <strong>2.0 L</strong>. Its volume is <strong>tripled</strong> at constant temperature. What is the new pressure?",
+     opts:["18 atm","3.0 atm","2.0 atm","6.0 atm"],
+     ans:2,
+     hint:"If volume triples, what fraction does pressure become? Remember P×V is constant.",
+     ok:"Correct! ✅ Volume tripled → pressure drops to ⅓: 6.0 ÷ 3 = 2.0 atm. Check: (6.0)(2.0) = (2.0)(6.0) ✓",
+     bad:"Volume tripled → pressure must drop to ⅓: 6.0 ÷ 3 = <strong>2.0 atm</strong>. P×V stays constant."},
+    {id:'bh5',type:'num',
+     txt:"A gas at <strong>1.4 atm</strong> and <strong>350 mL</strong> is compressed to <strong>140 mL</strong> at constant temperature. Calculate the final pressure.",
+     given:"P₁ = 1.4 atm    V₁ = 350 mL    V₂ = 140 mL    P₂ = ?",
+     ans:3.5,tol:0.18,unit:"atm",
+     hint:"P₂ = (P₁ × V₁) ÷ V₂. Units are consistent (both mL), so no conversion needed.",
+     ok:"P₂ = (1.4 × 350) ÷ 140 = 490 ÷ 140 = <strong>3.5 atm</strong> ✅",
+     bad:"P₂ = (1.4 × 350) ÷ 140 = 490 ÷ 140 = <strong>3.5 atm</strong>"}
+  ]
+},
+
+charles: {
+  easy: [
+    {id:'ce1',type:'mc',
+     txt:"According to Charles's Law, when the temperature of a gas <strong>increases</strong> at constant pressure, the volume will:",
+     opts:["Decrease","Stay the same","Increase","Instantly double"],
+     ans:2,
+     hint:"Think of a balloon left in a hot car. Temperature and volume have a direct (not inverse) relationship in Charles's Law.",
+     ok:"Correct! ✅ Charles's Law: V and T are directly proportional at constant pressure. Higher T → larger V.",
+     bad:"V and T are directly proportional in Charles's Law. When temperature increases, volume increases too."},
+    {id:'ce2',type:'mc',
+     txt:"Charles's Law calculations require temperature to be expressed in which unit?",
+     opts:["Celsius (°C)","Fahrenheit (°F)","Kelvin (K)","Any unit gives the same result"],
+     ans:2,
+     hint:"Gas laws use the absolute temperature scale. On this scale, 0 is the coldest possible temperature — absolute zero.",
+     ok:"Correct! ✅ Always use <strong>Kelvin</strong>! K = °C + 273. Using Celsius gives wrong answers because 0°C is not true zero.",
+     bad:"Always use <strong>Kelvin</strong> (K = °C + 273) in gas law calculations. Celsius has an arbitrary zero point that breaks the math."},
+    {id:'ce3',type:'num',
+     txt:"A gas has a volume of <strong>2.0 L</strong> at <strong>200 K</strong>. It is heated to <strong>400 K</strong> at constant pressure. What is the new volume?",
+     given:"V₁ = 2.0 L    T₁ = 200 K    T₂ = 400 K    V₂ = ?",
+     ans:4.0,tol:0.2,unit:"L",
+     hint:"Use V₂ = (V₁ × T₂) ÷ T₁. Temperature doubled — what do you predict happens to volume?",
+     ok:"V₂ = (2.0 × 400) ÷ 200 = <strong>4.0 L</strong> ✅ Temperature doubled, so volume doubled.",
+     bad:"V₂ = (V₁ × T₂) ÷ T₁ = (2.0 × 400) ÷ 200 = <strong>4.0 L</strong>"},
+    {id:'ce4',type:'mc',
+     txt:"Which two variables does Charles's Law relate?",
+     opts:["Pressure and Volume","Volume and Temperature","Pressure and Temperature","All three — P, V, and T"],
+     ans:1,
+     hint:"Charles's Law keeps pressure constant. Which two variables are left to change?",
+     ok:"Correct! ✅ Charles's Law: Volume and Temperature at constant pressure. V₁/T₁ = V₂/T₂.",
+     bad:"Charles's Law relates <strong>Volume and Temperature</strong> at constant pressure. Formula: V₁/T₁ = V₂/T₂."},
+    {id:'ce5',type:'num',
+     txt:"A gas occupies <strong>5.0 L</strong> at <strong>500 K</strong>. It is cooled to <strong>250 K</strong> at constant pressure. What is the new volume?",
+     given:"V₁ = 5.0 L    T₁ = 500 K    T₂ = 250 K    V₂ = ?",
+     ans:2.5,tol:0.15,unit:"L",
+     hint:"Temperature was cut in half — what do you predict happens to volume with a direct relationship?",
+     ok:"V₂ = (5.0 × 250) ÷ 500 = <strong>2.5 L</strong> ✅ Temperature halved, volume halved.",
+     bad:"V₂ = (V₁ × T₂) ÷ T₁ = (5.0 × 250) ÷ 500 = <strong>2.5 L</strong>"}
+  ],
+  medium: [
+    {id:'cm1',type:'mc',
+     txt:"A balloon has a volume of <strong>3.0 L</strong> at <strong>27°C</strong>. It is heated to <strong>57°C</strong> at constant pressure. Which is closest to the new volume?",
+     opts:["3.3 L","6.0 L","1.5 L","3.0 L"],
+     ans:0,
+     hint:"Convert to Kelvin first: T₁ = 27+273 = 300 K, T₂ = 57+273 = 330 K. Then V₂ = (3.0 × 330) ÷ 300.",
+     ok:"Correct! ✅ T₁=300K, T₂=330K. V₂ = (3.0 × 330) ÷ 300 = 3.3 L. Temperature only rose 10% in Kelvin.",
+     bad:"Must convert to K first: T₁=300K, T₂=330K. V₂=(3.0×330)÷300 = <strong>3.3 L</strong>. In Kelvin, temp only rose 10%."},
+    {id:'cm2',type:'num',
+     txt:"A gas occupies <strong>4.0 L</strong> at <strong>25°C</strong>. It is heated to <strong>75°C</strong> at constant pressure. What is the new volume?",
+     given:"Convert: T₁ = 25+273 = 298 K    T₂ = 75+273 = 348 K    V₁ = 4.0 L    V₂ = ?",
+     ans:4.67,tol:0.12,unit:"L",
+     hint:"K values are already given above. V₂ = (4.0 × 348) ÷ 298. Round to 2 decimal places.",
+     ok:"V₂ = (4.0 × 348) ÷ 298 = 1392 ÷ 298 ≈ <strong>4.67 L</strong> ✅",
+     bad:"V₂ = (4.0 × 348) ÷ 298 = 1392 ÷ 298 ≈ <strong>4.67 L</strong>"},
+    {id:'cm3',type:'mc',
+     txt:"A gas occupies <strong>6.0 L</strong> at <strong>300 K</strong>. At what temperature would it occupy <strong>9.0 L</strong> at constant pressure?",
+     opts:["200 K","450 K","600 K","150 K"],
+     ans:1,
+     hint:"Solving for T₂: T₂ = (T₁ × V₂) ÷ V₁ = (300 × 9.0) ÷ 6.0",
+     ok:"Correct! ✅ T₂ = (300 × 9.0) ÷ 6.0 = 2700 ÷ 6.0 = 450 K. Volume increased 1.5×, so T must increase 1.5×.",
+     bad:"T₂ = (T₁ × V₂) ÷ V₁ = (300 × 9.0) ÷ 6.0 = <strong>450 K</strong>"},
+    {id:'cm4',type:'num',
+     txt:"A gas has a volume of <strong>1.2 L</strong> at <strong>250 K</strong>. It is heated until its volume becomes <strong>2.4 L</strong> at constant pressure. What is the new temperature?",
+     given:"V₁ = 1.2 L    T₁ = 250 K    V₂ = 2.4 L    T₂ = ?",
+     ans:500,tol:8,unit:"K",
+     hint:"T₂ = (T₁ × V₂) ÷ V₁. Volume doubled — what should happen to temperature?",
+     ok:"T₂ = (250 × 2.4) ÷ 1.2 = 600 ÷ 1.2 = <strong>500 K</strong> ✅ Volume doubled, temperature doubled.",
+     bad:"T₂ = (T₁ × V₂) ÷ V₁ = (250 × 2.4) ÷ 1.2 = <strong>500 K</strong>"},
+    {id:'cm5',type:'mc',
+     txt:"A chip bag puffs up noticeably on a hot summer day compared to a cool morning. Pressure inside is the same both times. Which best explains this?",
+     opts:["More gas molecules enter through tiny holes","Temperature increase causes volume to increase at constant pressure","Atmospheric pressure drops in summer heat","The bag material itself expands when warm"],
+     ans:1,
+     hint:"The bag is sealed — no gas enters or leaves. Charles's Law relates which two variables at constant pressure?",
+     ok:"Correct! ✅ Charles's Law: higher temperature → larger volume at constant pressure. The gas inside expands, puffing the bag.",
+     bad:"Charles's Law: at constant pressure, V and T are directly proportional. Higher temperature → gas expands → bag puffs up."}
+  ],
+  hard: [
+    {id:'ch1',type:'num',
+     txt:"A gas occupies <strong>850 mL</strong> at <strong>22°C</strong>. It is cooled to <strong>-35°C</strong> at constant pressure. What is the new volume?",
+     given:"Convert: T₁ = 22+273 = 295 K    T₂ = -35+273 = 238 K    V₁ = 850 mL    V₂ = ?",
+     ans:685,tol:12,unit:"mL",
+     hint:"T values are converted above. V₂ = (850 × 238) ÷ 295. Notice T₂ < T₁ — volume should decrease.",
+     ok:"V₂ = (850 × 238) ÷ 295 = 202300 ÷ 295 ≈ <strong>685 mL</strong> ✅",
+     bad:"V₂ = (850 × 238) ÷ 295 = 202300 ÷ 295 ≈ <strong>685 mL</strong>"},
+    {id:'ch2',type:'mc',
+     txt:"A gas at <strong>400 K</strong> has a volume of <strong>3.6 L</strong>. The gas cools at constant pressure until its volume drops to <strong>2.7 L</strong>. What is the new temperature in Celsius?",
+     opts:["27°C","127°C","-73°C","300°C"],
+     ans:0,
+     hint:"Find T₂ in Kelvin first: T₂ = (T₁ × V₂) ÷ V₁. Then convert: °C = K - 273.",
+     ok:"Correct! ✅ T₂ = (400 × 2.7) ÷ 3.6 = 300 K → 300 - 273 = <strong>27°C</strong>.",
+     bad:"T₂=(400×2.7)÷3.6 = 300 K → 300-273 = <strong>27°C</strong>. Always convert K→°C at the end if asked."},
+    {id:'ch3',type:'num',
+     txt:"A gas at <strong>127°C</strong> has a volume of <strong>2.0 L</strong>. It cools to <strong>27°C</strong> at constant pressure. What is the new volume?",
+     given:"Convert: T₁ = 127+273 = 400 K    T₂ = 27+273 = 300 K    V₁ = 2.0 L    V₂ = ?",
+     ans:1.5,tol:0.1,unit:"L",
+     hint:"Both temperatures are converted above. V₂ = (V₁ × T₂) ÷ T₁. Temperature dropped — volume should decrease.",
+     ok:"V₂ = (2.0 × 300) ÷ 400 = 600 ÷ 400 = <strong>1.5 L</strong> ✅",
+     bad:"V₂ = (2.0 × 300) ÷ 400 = <strong>1.5 L</strong>"},
+    {id:'ch4',type:'mc',
+     txt:"A student says: <em>\"If I double the temperature from 50°C to 100°C, the gas volume will double.\"</em> Is this correct?",
+     opts:["Yes — temperature doubled so volume doubles","No — must use Kelvin: 323 K to 373 K, which is NOT doubling","No — volume and temperature are not related","Yes — but only if pressure is also doubled"],
+     ans:1,
+     hint:"Convert both temperatures to Kelvin. Does the Kelvin value actually double when you go from 50°C to 100°C?",
+     ok:"Correct! ✅ 50°C = 323 K, 100°C = 373 K. 373/323 ≈ 1.15, not 2.0. Always use Kelvin!",
+     bad:"Must use Kelvin: 50°C=323 K, 100°C=373 K. That's only a 15% increase, not a doubling. Celsius doesn't work in these equations."},
+    {id:'ch5',type:'num',
+     txt:"A gas occupies <strong>600 mL</strong> at <strong>15°C</strong>. It is heated to <strong>85°C</strong> at constant pressure. Calculate the new volume.",
+     given:"Convert: T₁ = 15+273 = 288 K    T₂ = 85+273 = 358 K    V₁ = 600 mL    V₂ = ?",
+     ans:745,tol:15,unit:"mL",
+     hint:"V₂ = (600 × 358) ÷ 288. Both T values are already in Kelvin above.",
+     ok:"V₂ = (600 × 358) ÷ 288 = 214800 ÷ 288 ≈ <strong>746 mL</strong> ✅",
+     bad:"V₂ = (600 × 358) ÷ 288 ≈ <strong>746 mL</strong>"}
+  ]
+},
+
+gl: {
+  easy: [
+    {id:'ge1',type:'mc',
+     txt:"In a <strong>rigid (sealed) container</strong>, when the temperature of the gas increases, the pressure will:",
+     opts:["Increase","Decrease","Stay the same","Become unpredictable"],
+     ans:0,
+     hint:"Rigid = volume can't change. Hotter molecules move faster. What happens when they hit the container walls harder and more often?",
+     ok:"Correct! ✅ Hotter molecules = more kinetic energy = harder, more frequent collisions with walls = higher pressure.",
+     bad:"In a rigid container, faster molecules hit the walls harder → pressure <strong>increases</strong>. P and T are directly related."},
+    {id:'ge2',type:'mc',
+     txt:"Gay-Lussac's Law works specifically for which type of container?",
+     opts:["Flexible containers like balloons","Rigid containers like metal tanks","Open containers","Partially open containers"],
+     ans:1,
+     hint:"Gay-Lussac's Law keeps volume constant. What type of container physically prevents volume from changing?",
+     ok:"Correct! ✅ Rigid containers (sealed metal tanks, car tires, aerosol cans) cannot expand — volume is always fixed.",
+     bad:"Gay-Lussac's Law requires constant volume, so it applies to <strong>rigid containers</strong> that cannot expand."},
+    {id:'ge3',type:'num',
+     txt:"A gas in a rigid container has a pressure of <strong>1.0 atm</strong> at <strong>200 K</strong>. It is heated to <strong>400 K</strong>. What is the new pressure?",
+     given:"P₁ = 1.0 atm    T₁ = 200 K    T₂ = 400 K    P₂ = ?",
+     ans:2.0,tol:0.12,unit:"atm",
+     hint:"P₂ = (P₁ × T₂) ÷ T₁. Temperature doubled — what should happen to pressure?",
+     ok:"P₂ = (1.0 × 400) ÷ 200 = <strong>2.0 atm</strong> ✅ Temperature doubled, pressure doubled.",
+     bad:"P₂ = (P₁ × T₂) ÷ T₁ = (1.0 × 400) ÷ 200 = <strong>2.0 atm</strong>"},
+    {id:'ge4',type:'mc',
+     txt:"Which variable remains constant in Gay-Lussac's Law?",
+     opts:["Temperature","Pressure","Volume","Amount of gas molecules"],
+     ans:2,
+     hint:"Gay-Lussac's Law relates P and T. The third main gas variable must be the one held constant.",
+     ok:"Correct! ✅ Volume is constant — the container is rigid and cannot expand or contract.",
+     bad:"<strong>Volume</strong> is held constant in Gay-Lussac's Law. The rigid container prevents any size change."},
+    {id:'ge5',type:'num',
+     txt:"A rigid container holds gas at <strong>3.0 atm</strong> and <strong>300 K</strong>. It cools down to <strong>150 K</strong>. What is the new pressure?",
+     given:"P₁ = 3.0 atm    T₁ = 300 K    T₂ = 150 K    P₂ = ?",
+     ans:1.5,tol:0.1,unit:"atm",
+     hint:"Temperature was cut in half — what should happen to pressure with a direct relationship?",
+     ok:"P₂ = (3.0 × 150) ÷ 300 = <strong>1.5 atm</strong> ✅ Temperature halved, pressure halved.",
+     bad:"P₂ = (3.0 × 150) ÷ 300 = <strong>1.5 atm</strong>"}
+  ],
+  medium: [
+    {id:'gm1',type:'mc',
+     txt:"A car tire has a pressure of <strong>35 psi</strong> on a cold morning at <strong>20°C</strong>. After driving, the tire heats to <strong>50°C</strong>. Which is closest to the new tire pressure?",
+     opts:["38.6 psi","31.4 psi","35 psi","70 psi"],
+     ans:0,
+     hint:"Convert to Kelvin: T₁=293K, T₂=323K. P₂ = (35 × 323) ÷ 293. The temperature didn't change much in Kelvin.",
+     ok:"Correct! ✅ T₁=293K, T₂=323K. P₂ = (35 × 323) ÷ 293 ≈ 38.6 psi. Small Kelvin change = small pressure change.",
+     bad:"T₁=293K, T₂=323K → P₂=(35×323)÷293 ≈ <strong>38.6 psi</strong>"},
+    {id:'gm2',type:'num',
+     txt:"A sealed container holds gas at <strong>2.0 atm</strong> and <strong>25°C</strong>. It is heated to <strong>75°C</strong>. What is the new pressure?",
+     given:"Convert: T₁ = 25+273 = 298 K    T₂ = 75+273 = 348 K    P₁ = 2.0 atm    P₂ = ?",
+     ans:2.34,tol:0.1,unit:"atm",
+     hint:"P₂ = (P₁ × T₂) ÷ T₁. T values in Kelvin are already given above.",
+     ok:"P₂ = (2.0 × 348) ÷ 298 = 696 ÷ 298 ≈ <strong>2.34 atm</strong> ✅",
+     bad:"P₂ = (2.0 × 348) ÷ 298 ≈ <strong>2.34 atm</strong>"},
+    {id:'gm3',type:'mc',
+     txt:"A rigid container holds gas at <strong>1.5 atm</strong> and <strong>300 K</strong>. The temperature drops to <strong>200 K</strong>. What is the new pressure?",
+     opts:["1.0 atm","2.25 atm","1.5 atm","0.75 atm"],
+     ans:0,
+     hint:"P₂ = (P₁ × T₂) ÷ T₁ = (1.5 × 200) ÷ 300. Temperature dropped to ⅔ — what happens to pressure?",
+     ok:"Correct! ✅ P₂ = (1.5 × 200) ÷ 300 = 1.0 atm. T dropped to ⅔, so P also drops to ⅔.",
+     bad:"P₂ = (1.5 × 200) ÷ 300 = <strong>1.0 atm</strong>"},
+    {id:'gm4',type:'num',
+     txt:"Gas in a rigid container is at <strong>4.0 atm</strong> and <strong>400 K</strong>. It is heated until pressure reaches <strong>6.0 atm</strong>. What temperature is reached?",
+     given:"P₁ = 4.0 atm    T₁ = 400 K    P₂ = 6.0 atm    T₂ = ?",
+     ans:600,tol:8,unit:"K",
+     hint:"Solving for T₂: T₂ = (P₂ × T₁) ÷ P₁. Pressure increased by 1.5× — what should happen to temperature?",
+     ok:"T₂ = (6.0 × 400) ÷ 4.0 = 2400 ÷ 4.0 = <strong>600 K</strong> ✅",
+     bad:"T₂ = (P₂ × T₁) ÷ P₁ = (6.0 × 400) ÷ 4.0 = <strong>600 K</strong>"},
+    {id:'gm5',type:'mc',
+     txt:"Tire manufacturers recommend checking tire pressure when the tires are <strong>cold</strong>. Which gas law best explains why tires feel low after sitting overnight in winter?",
+     opts:["Boyle's Law — volume decreases in cold air","Charles's Law — volume and temperature drop together","Gay-Lussac's Law — temperature dropped, reducing pressure in the fixed-volume tire","The ideal gas law only"],
+     ans:2,
+     hint:"Tires are rigid — volume is fixed. Temperature dropped overnight. Which law relates P and T at constant V?",
+     ok:"Correct! ✅ Rigid tire = constant volume. Colder temperature → lower pressure. Gay-Lussac's Law: P₁/T₁ = P₂/T₂.",
+     bad:"Rigid tire = fixed volume. Gay-Lussac's Law: lower temperature → lower pressure in a fixed-volume container."}
+  ],
+  hard: [
+    {id:'gh1',type:'num',
+     txt:"A rigid metal tank holds gas at <strong>145 psi</strong> at <strong>22°C</strong>. It is left in the sun and heats to <strong>65°C</strong>. What is the new pressure?",
+     given:"Convert: T₁ = 22+273 = 295 K    T₂ = 65+273 = 338 K    P₁ = 145 psi    P₂ = ?",
+     ans:166.1,tol:3.0,unit:"psi",
+     hint:"P₂ = (P₁ × T₂) ÷ T₁ = (145 × 338) ÷ 295. Both T values are already converted above.",
+     ok:"P₂ = (145 × 338) ÷ 295 = 49010 ÷ 295 ≈ <strong>166.1 psi</strong> ✅",
+     bad:"P₂ = (145 × 338) ÷ 295 ≈ <strong>166.1 psi</strong>"},
+    {id:'gh2',type:'mc',
+     txt:"An aerosol can has a pressure of <strong>2.5 atm</strong> at <strong>25°C</strong>. Someone throws it into a fire where the temperature reaches <strong>400°C</strong>. Approximately what pressure does the can reach?",
+     opts:["5.65 atm","40 atm","2.5 atm","3.5 atm"],
+     ans:0,
+     hint:"Convert to Kelvin: T₁=298K, T₂=673K. P₂ = (2.5 × 673) ÷ 298. Think about how much T increased in Kelvin.",
+     ok:"Correct! ✅ T₁=298K, T₂=673K. P₂=(2.5×673)÷298 = 1682.5÷298 ≈ 5.65 atm. That's why aerosol cans say 'do not incinerate'!",
+     bad:"T₁=298K, T₂=673K → P₂=(2.5×673)÷298 ≈ <strong>5.65 atm</strong>. More than double — dangerous for a sealed can!"},
+    {id:'gh3',type:'num',
+     txt:"A rigid container holds gas at <strong>1.8 atm</strong> and <strong>30°C</strong>. The gas cools until pressure drops to <strong>1.2 atm</strong>. What is the new temperature in Kelvin?",
+     given:"Convert: T₁ = 30+273 = 303 K    P₁ = 1.8 atm    P₂ = 1.2 atm    T₂ = ?",
+     ans:202,tol:5,unit:"K",
+     hint:"T₂ = (P₂ × T₁) ÷ P₁ = (1.2 × 303) ÷ 1.8. Pressure decreased — temperature should also decrease.",
+     ok:"T₂ = (1.2 × 303) ÷ 1.8 = 363.6 ÷ 1.8 ≈ <strong>202 K</strong> ✅",
+     bad:"T₂ = (1.2 × 303) ÷ 1.8 ≈ <strong>202 K</strong>"},
+    {id:'gh4',type:'mc',
+     txt:"A rigid container holds gas at <strong>3.0 atm</strong> at <strong>127°C</strong>. To <strong>triple the pressure</strong> to 9.0 atm, what temperature (in Celsius) is needed?",
+     opts:["381°C","927°C","1200°C","654°C"],
+     ans:1,
+     hint:"T₁=400K. To triple pressure, T must also triple: T₂=1200K. Convert to Celsius: K-273.",
+     ok:"Correct! ✅ T₁=127+273=400K. T₂=400×3=1200K → 1200-273 = <strong>927°C</strong>.",
+     bad:"T₁=400K. Triple pressure → triple T: 400×3=1200K → 1200-273 = <strong>927°C</strong>"},
+    {id:'gh5',type:'num',
+     txt:"A rigid container holds gas at <strong>0.95 atm</strong> at <strong>-15°C</strong>. It warms to <strong>45°C</strong>. What is the new pressure?",
+     given:"Convert: T₁ = -15+273 = 258 K    T₂ = 45+273 = 318 K    P₁ = 0.95 atm    P₂ = ?",
+     ans:1.17,tol:0.06,unit:"atm",
+     hint:"P₂ = (P₁ × T₂) ÷ T₁ = (0.95 × 318) ÷ 258. Both T values are converted above.",
+     ok:"P₂ = (0.95 × 318) ÷ 258 = 302.1 ÷ 258 ≈ <strong>1.17 atm</strong> ✅",
+     bad:"P₂ = (0.95 × 318) ÷ 258 ≈ <strong>1.17 atm</strong>"}
+  ]
+},
+
+id: [
+  {id:'id1',type:'mc',
+   txt:"A scuba diver exhales at depth where pressure is 4.0 atm. As the bubble rises to the surface (1.0 atm), it grows much larger. <strong>The water temperature is constant throughout.</strong> Which law explains this?",
+   opts:["Charles's Law","Gay-Lussac's Law","Boyle's Law"],
+   ans:2,
+   hint:"Ask yourself: which variable is held constant here? Then which two are changing?",
+   ok:"Boyle's Law ✅ — Temperature is constant. Pressure decreases and volume increases (inverse). P₁V₁ = P₂V₂.",
+   bad:"Boyle's Law — temperature stays constant; P↓ and V↑. That's the inverse P-V relationship."},
+  {id:'id2',type:'mc',
+   txt:"A sealed, flexible bag of chips is moved from a cool store (4°C) to a hot car (45°C). The bag puffs up. <strong>Atmospheric pressure is the same in both places.</strong> Which law applies?",
+   opts:["Boyle's Law","Gay-Lussac's Law","Charles's Law"],
+   ans:2,
+   hint:"Pressure is stated as constant. The bag is flexible so it can expand. Which two variables are changing?",
+   ok:"Charles's Law ✅ — Pressure is constant; temperature increases and volume increases (direct). V₁/T₁ = V₂/T₂.",
+   bad:"Charles's Law — pressure stays constant; T↑ and V↑. That's the direct V-T relationship."},
+  {id:'id3',type:'mc',
+   txt:"A basketball is inflated indoors at 20°C, then left outside overnight at -10°C. In the morning the ball feels flat, even though no air leaked. Which law explains the pressure drop?",
+   opts:["Boyle's Law","Charles's Law","Gay-Lussac's Law"],
+   ans:2,
+   hint:"A basketball is rigid — what can't change? Temperature changed. Which two variables are related here?",
+   ok:"Gay-Lussac's Law ✅ — Volume is constant (rigid ball); temperature decreases and pressure decreases (direct). P₁/T₁ = P₂/T₂.",
+   bad:"Gay-Lussac's Law — rigid ball means constant volume; T↓ so P↓. That's the direct P-T relationship."},
+  {id:'id4',type:'mc',
+   txt:"A nurse draws medication into a syringe by pulling back the plunger, increasing the inside volume. <strong>Body temperature stays constant.</strong> Liquid is pulled in as inside pressure drops below atmospheric. Which law applies?",
+   opts:["Gay-Lussac's Law","Charles's Law","Boyle's Law"],
+   ans:2,
+   hint:"Temperature is stated as constant. Volume is being changed by pulling the plunger. Which law involves P and V at constant T?",
+   ok:"Boyle's Law ✅ — Temperature constant; V↑ → P↓ (inverse). The lower pressure draws the liquid in.",
+   bad:"Boyle's Law — temperature is constant; volume increases and pressure decreases. That's the inverse P-V relationship."},
+  {id:'id5',type:'mc',
+   txt:"A sealed pressure cooker on the stove cannot expand (rigid lid). As food cooks inside, the steam temperature rises from 100°C to 120°C, and pressure builds inside the pot. Which law describes this?",
+   opts:["Charles's Law","Boyle's Law","Gay-Lussac's Law"],
+   ans:2,
+   hint:"The pot cannot expand — what does that tell you about volume? Which two variables are changing?",
+   ok:"Gay-Lussac's Law ✅ — Volume is constant (rigid pot); T↑ → P↑ (direct). P₁/T₁ = P₂/T₂.",
+   bad:"Gay-Lussac's Law — rigid pot means constant volume; temperature rises and pressure rises together."},
+  {id:'id6',type:'mc',
+   txt:"A weather balloon is released and rises to high altitude. As it climbs, outside pressure drops, allowing the balloon to expand. <strong>Temperature also decreases at altitude, working against the expansion.</strong> If only the pressure drop is considered at constant temperature, which law applies?",
+   opts:["Charles's Law","Gay-Lussac's Law","Boyle's Law"],
+   ans:2,
+   hint:"The question tells you to consider only the pressure drop at constant temperature. Which law involves only P and V?",
+   ok:"Boyle's Law ✅ — Considering only pressure drop at constant temperature: P↓ → V↑. This is the inverse P-V relationship.",
+   bad:"Boyle's Law — if temperature is held constant and only pressure changes, Boyle's Law (P₁V₁=P₂V₂) applies."}
+]
+};
+
+// ═══════════════════════════════════════════════════
+// SEQUENCE: 25 questions — 8B 7C 7GL 3ID
+// ═══════════════════════════════════════════════════
+const SEQ = [
+  'boyle','charles','gl','boyle','charles','gl','id',
+  'boyle','charles','gl','boyle','charles','gl','id',
+  'boyle','charles','gl','boyle','charles','gl','id',
+  'boyle','charles','gl','boyle'
+];
+// Count check: B=8, C=7, GL=7, ID=3 ✓
+
+// ═══════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════
+let studentName = '';
+let qIndex = 0;          // current position in SEQ
+let currentQ = null;
+let answered = false;
+let used = new Set();
+let diffPath = [];       // track difficulty per question for display
+
+// Per-law difficulty tracking
+const lawDiff = {boyle:'medium', charles:'medium', gl:'medium', id:'medium'};
+
+// Scores per law
+const scores = {
+  boyle:{c:0,t:0}, charles:{c:0,t:0}, gl:{c:0,t:0}, id:{c:0,t:0}
+};
+
+const DIFF_ORDER = ['easy','medium','hard'];
+
+// ═══════════════════════════════════════════════════
+// WELCOME
+// ═══════════════════════════════════════════════════
+document.getElementById('sname').addEventListener('input',function(){
+  document.getElementById('startbtn').disabled = this.value.trim().length < 2;
+});
+document.getElementById('sname').addEventListener('keydown',function(e){
+  if(e.key==='Enter'&&this.value.trim().length>=2) startQuiz();
+});
+
+function startQuiz(){
+  studentName = document.getElementById('sname').value.trim();
+  showScreen('quiz');
+  loadQuestion();
+}
+
+// ═══════════════════════════════════════════════════
+// SCREEN NAV
+// ═══════════════════════════════════════════════════
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0,0);
+  document.getElementById('pfill').style.width = (qIndex/25*100)+'%';
+}
+
+function toggleRef(){
+  const b=document.getElementById('fref-body');
+  const a=document.getElementById('ref-arrow');
+  b.classList.toggle('open');
+  a.textContent = b.classList.contains('open') ? '▲' : '▼';
+}
+
+// ═══════════════════════════════════════════════════
+// PICK NEXT QUESTION
+// ═══════════════════════════════════════════════════
+function pickQ(law){
+  if(law==='id'){
+    const pool = QB.id.filter(q=>!used.has(q.id));
+    if(!pool.length) return QB.id[Math.floor(Math.random()*QB.id.length)];
+    return pool[Math.floor(Math.random()*pool.length)];
+  }
+  const diff = lawDiff[law];
+  const pool = QB[law][diff].filter(q=>!used.has(q.id));
+  if(pool.length) return pool[Math.floor(Math.random()*pool.length)];
+  // fallback: try adjacent difficulties
+  for(const d of ['medium','easy','hard']){
+    const fp = QB[law][d].filter(q=>!used.has(q.id));
+    if(fp.length) return fp[Math.floor(Math.random()*fp.length)];
+  }
+  // last resort: any unused
+  const all = [...QB[law].easy,...QB[law].medium,...QB[law].hard].filter(q=>!used.has(q.id));
+  if(all.length) return all[Math.floor(Math.random()*all.length)];
+  return QB[law][diff][0]; // shouldn't happen
+}
+
+// ═══════════════════════════════════════════════════
+// LOAD QUESTION
+// ═══════════════════════════════════════════════════
+function loadQuestion(){
+  if(qIndex >= SEQ.length){ showResults(); return; }
+  answered = false;
+
+  const law = SEQ[qIndex];
+  currentQ = pickQ(law);
+  used.add(currentQ.id);
+
+  const diff = law==='id' ? 'medium' : lawDiff[law];
+  diffPath.push({law,diff,qid:currentQ.id});
+
+  // Update progress
+  document.getElementById('pfill').style.width = (qIndex/25*100)+'%';
+  document.getElementById('qcount').textContent = `Question ${qIndex+1} of 25`;
+
+  // Law tag
+  const lawNames={boyle:"Boyle's Law",charles:"Charles's Law",gl:"Gay-Lussac's Law",id:"Identify the Law"};
+  const lawColors={boyle:'var(--boyle)',charles:'var(--charles)',gl:'var(--gl)',id:'var(--id)'};
+  const lt=document.getElementById('law-tag');
+  lt.textContent=lawNames[law];
+  lt.style.cssText=`background:rgba(${lawRGB(law)},.12);color:${lawColors[law]};border:1px solid rgba(${lawRGB(law)},.3)`;
+
+  // Diff badge
+  const diffLabels={easy:'⬇ Easy',medium:'⬛ Medium',hard:'⬆ Hard'};
+  const diffColors={easy:'var(--easy)',medium:'var(--med)',hard:'var(--hard)'};
+  const db=document.getElementById('diff-badge');
+  db.textContent=diffLabels[diff];
+  db.style.cssText=`color:${diffColors[diff]};border-color:${diffColors[diff]};background:rgba(${diffRGB(diff)},.08)`;
+
+  // Question text
+  document.getElementById('qtxt').innerHTML = currentQ.txt;
+
+  // Given box
+  const gbox=document.getElementById('qgiven');
+  if(currentQ.given){
+    gbox.innerHTML=currentQ.given;
+    gbox.style.display='block';
+  } else {
+    gbox.style.display='none';
+  }
+
+  // Hint
+  document.getElementById('hbox').className='hbox';
+  document.getElementById('hbox').textContent=currentQ.hint;
+  document.getElementById('hbtn').style.display='inline-flex';
+
+  // Question body
+  const qb=document.getElementById('qbody');
+  qb.innerHTML='';
+  if(currentQ.type==='mc') buildMC(qb);
+  else buildNum(qb);
+
+  // Reset fb + adaptive msg
+  const fb=document.getElementById('fb');
+  fb.className='fb';fb.innerHTML='';
+  const am=document.getElementById('adaptmsg');
+  am.className='adapt-msg';am.innerHTML='';
+
+  // Hide next btn
+  document.getElementById('nbtn').className='nbtn';
+}
+
+function lawRGB(l){return{boyle:'34,211,238',charles:'74,222,128',gl:'192,132,252',id:'251,146,60'}[l];}
+function diffRGB(d){return{easy:'74,222,128',medium:'251,191,36',hard:'248,113,113'}[d];}
+
+// ═══════════════════════════════════════════════════
+// BUILD MC
+// ═══════════════════════════════════════════════════
+function buildMC(container){
+  const div=document.createElement('div');
+  div.className='mc-opts';
+  div.id='mcopts';
+  const letters=['A','B','C','D'];
+  currentQ.opts.forEach((opt,i)=>{
+    const el=document.createElement('div');
+    el.className='mc-opt';
+    el.id='mo-'+i;
+    el.innerHTML=`<span class="oltr">${letters[i]}</span>${opt}`;
+    el.onclick=()=>selectMC(i);
+    div.appendChild(el);
+  });
+  container.appendChild(div);
+  const btn=document.createElement('button');
+  btn.className='sbtn';btn.id='sbtn';btn.textContent='✓ Submit Answer';
+  btn.onclick=submitMC;
+  container.appendChild(btn);
+}
+
+let selectedMC = -1;
+function selectMC(i){
+  if(answered) return;
+  selectedMC=i;
+  document.querySelectorAll('.mc-opt').forEach((el,j)=>{
+    el.classList.toggle('sel',j===i);
+  });
+  document.getElementById('sbtn').classList.add('ready');
+}
+
+function submitMC(){
+  if(selectedMC<0||answered) return;
+  answered=true;
+  const ok=selectedMC===currentQ.ans;
+  // Lock options
+  document.querySelectorAll('.mc-opt').forEach((el,i)=>{
+    el.classList.add('locked');
+    if(i===currentQ.ans) el.classList.add('ok-ans');
+    else if(i===selectedMC&&!ok) el.classList.add('wrong-ans');
+  });
+  document.getElementById('sbtn').disabled=true;
+  grade(ok);
+  selectedMC=-1;
+}
+
+// ═══════════════════════════════════════════════════
+// BUILD NUMERIC
+// ═══════════════════════════════════════════════════
+function buildNum(container){
+  const row=document.createElement('div');
+  row.className='num-row';
+  const inp=document.createElement('input');
+  inp.type='number';inp.step='any';inp.className='numin';inp.id='numin';inp.placeholder='Answer';
+  inp.addEventListener('input',()=>{
+    document.getElementById('nsbtn').classList.toggle('ready',inp.value.trim()!=='');
+  });
+  inp.addEventListener('keydown',e=>{if(e.key==='Enter')submitNum();});
+  const unit=document.createElement('span');
+  unit.className='unit';unit.textContent=currentQ.unit;
+  row.appendChild(inp);row.appendChild(unit);
+  container.appendChild(row);
+  const ws=document.createElement('div');
+  ws.className='ws';
+  ws.innerHTML='<label>Show your work (optional)</label><textarea placeholder="Formula → plug in numbers → solve..."></textarea>';
+  container.appendChild(ws);
+  const btn=document.createElement('button');
+  btn.className='sbtn';btn.id='nsbtn';btn.textContent='✓ Submit Answer';
+  btn.onclick=submitNum;
+  container.appendChild(btn);
+}
+
+function submitNum(){
+  if(answered) return;
+  const inp=document.getElementById('numin');
+  const val=parseFloat(inp.value);
+  if(isNaN(val)) return;
+  answered=true;
+  const ok=Math.abs(val-currentQ.ans)<=currentQ.tol;
+  inp.classList.add(ok?'ok':'bad');
+  inp.disabled=true;
+  document.getElementById('nsbtn').disabled=true;
+  grade(ok);
+}
+
+// ═══════════════════════════════════════════════════
+// GRADE + ADAPTIVE
+// ═══════════════════════════════════════════════════
+function grade(ok){
+  const law=SEQ[qIndex];
+
+  // Score
+  scores[law].t++;
+  if(ok) scores[law].c++;
+
+  // Feedback
+  const fb=document.getElementById('fb');
+  fb.innerHTML=(ok?'✅ ':'❌ ')+currentQ[ok?'ok':'bad'];
+  fb.className='fb '+(ok?'ok':'bad');
+
+  // Adaptive difficulty adjustment (not for id questions)
+  let adaptHTML='';
+  if(law!=='id'){
+    const cur=lawDiff[law];
+    const ci=DIFF_ORDER.indexOf(cur);
+    if(ok){
+      if(ci<2){
+        lawDiff[law]=DIFF_ORDER[ci+1];
+        adaptHTML='📈 Nice work! Moving to a <strong>harder</strong> question next time.';
+        document.getElementById('adaptmsg').className='adapt-msg up show';
+      } else {
+        adaptHTML='🌟 Correct! Staying at <strong>Hard</strong> level — excellent!';
+        document.getElementById('adaptmsg').className='adapt-msg up show';
+      }
+    } else {
+      if(ci>0){
+        lawDiff[law]=DIFF_ORDER[ci-1];
+        adaptHTML='📉 Let\'s practice with an <strong>easier</strong> question next time.';
+        document.getElementById('adaptmsg').className='adapt-msg dn show';
+      } else {
+        adaptHTML='💪 Staying at <strong>Easy</strong> — review the formula card and try again!';
+        document.getElementById('adaptmsg').className='adapt-msg same show';
+      }
+    }
+  }
+  document.getElementById('adaptmsg').innerHTML=adaptHTML;
+
+  // Show next button
+  const isLast = qIndex===SEQ.length-1;
+  const nb=document.getElementById('nbtn');
+  nb.textContent=isLast?'VIEW MY RESULTS →':'NEXT QUESTION →';
+  nb.className='nbtn show';
+  document.getElementById('hbtn').style.display='none';
+}
+
+function showHint(){
+  document.getElementById('hbox').classList.toggle('on');
+}
+
+function nextQ(){
+  qIndex++;
+  loadQuestion();
+}
+
+// ═══════════════════════════════════════════════════
+// RESULTS
+// ═══════════════════════════════════════════════════
+function showResults(){
+  showScreen('results');
+  document.getElementById('pfill').style.width='100%';
+
+  const total=scores.boyle.c+scores.charles.c+scores.gl.c+scores.id.c;
+  const pct=Math.round(total/25*100);
+
+  // Save to localStorage to prevent retakes
+  saveCompletion(studentName, total);
+
+  document.getElementById('rnum').textContent=total;
+
+  // Score ring animation
+  const ring=document.getElementById('sring');
+  const offset=408-(total/25)*408;
+  ring.style.stroke=pct>=80?'var(--ok)':pct>=60?'var(--med)':'var(--err)';
+  setTimeout(()=>ring.style.strokeDashoffset=offset,100);
+
+  // Messages
+  const msgs=[
+    [92,'Outstanding! 🌟','Excellent command of all three gas laws.'],
+    [80,'Great Work! 🎯','Strong performance — review any misses before the test.'],
+    [68,'Good Effort! 📚','Review the missed concepts using the formula card.'],
+    [0,'Keep Practicing! 💪','Go back through the formula card and try again.']
+  ];
+  const [,title,sub]=msgs.find(([min])=>pct>=min);
+  document.getElementById('rmsg').textContent=title;
+  document.getElementById('rsub').textContent=sub;
+
+  // Breakdown
+  const fmt = k => `${scores[k].c}/${scores[k].t}`;
+  document.getElementById('bdb').textContent=fmt('boyle');
+  document.getElementById('bdc').textContent=fmt('charles');
+  document.getElementById('bdg').textContent=fmt('gl');
+  document.getElementById('bdi').textContent=fmt('id');
+
+  // Difficulty path summary
+  const lawLabels={boyle:'B',charles:'C',gl:'GL',id:'ID'};
+  const diffSymbols={easy:'🟢',medium:'🟡',hard:'🔴'};
+  let pathHtml='<strong style="color:var(--dim)">Difficulty Path: </strong>';
+  diffPath.forEach((item,i)=>{
+    pathHtml+=`<span title="${item.law} — ${item.diff}">${diffSymbols[item.diff]}${lawLabels[item.law]}</span> `;
+    if((i+1)%7===0) pathHtml+='<br>';
+  });
+  document.getElementById('diffpath').innerHTML=pathHtml;
+
+  // Submission code
+  const d=new Date();
+  const ds=d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+  const ts=d.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
+  const code=genCode(studentName,total);
+
+  document.getElementById('codebox').textContent=
+`GAS LAWS ADAPTIVE ASSESSMENT — SUBMISSION
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Student   : ${studentName}
+Score     : ${total}/25  (${pct}%)
+
+Boyle's Law   : ${fmt('boyle')}
+Charles's Law : ${fmt('charles')}
+Gay-Lussac's  : ${fmt('gl')}
+Identify Law  : ${fmt('id')}
+
+Completed : ${ds} at ${ts}
+Verify    : ${code}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`;
+}
+
+function genCode(name,score){
+  const s=name.toLowerCase().replace(/\s/g,'')+score;
+  let h=0x811c9dc5;
+  for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,0x01000193);}
+  return 'GLA-'+(h>>>0).toString(16).toUpperCase().padStart(6,'0').slice(0,6);
+}
+
+function copyCode(){
+  navigator.clipboard.writeText(document.getElementById('codebox').textContent).then(()=>{
+    const m=document.getElementById('cpmsg');m.style.display='block';
+    setTimeout(()=>m.style.display='none',5000);
+  }).catch(()=>{
+    const el=document.getElementById('codebox');
+    const r=document.createRange();r.selectNodeContents(el);
+    window.getSelection().removeAllRanges();window.getSelection().addRange(r);
+  });
+}
+</script>
+</body>
+</html>
